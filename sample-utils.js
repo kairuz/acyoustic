@@ -70,6 +70,7 @@ const loadSampleBuffersParallel = (audioContext, samples, _samplePathToUrlCallba
     }
   })));
 };
+
 const newSampleNode = (audioBuffer, audioContext, gain = null) => {
   const sampleNode = new AudioBufferSourceNode(audioContext, {buffer: audioBuffer});
   if (gain !== null && typeof gain === 'number' &&
