@@ -68,7 +68,6 @@ const Alternator = (_audioContext, _compositionDescriptors,
         running = false;
         currScheduler.stop(true);
         stopCallback(schedulerIndex);
-        schedulerIndex = schedulers.length - 1;
       }
       else {
         console.warn(`alternator illegal state - running=${running}`);
