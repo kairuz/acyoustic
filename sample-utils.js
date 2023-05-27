@@ -21,33 +21,7 @@ const downloadBuffer = (audioContext, url) => {
 
 const defaultSamplePathToUrlCallback = (samplePath) => samplePath;
 
-const loadSampleBuffersSequential = (audioContext, samples, _samplePathToUrlCallback = defaultSamplePathToUrlCallback) => {
-  const samplePathToUrlCallback = typeof _samplePathToUrlCallback === 'function' ? _samplePathToUrlCallback : defaultSamplePathToUrlCallback;
-  return Object.entries(samples).reduce(
-    (acc, entry) => acc.then(() => {
-      const sampleName = entry[0];
-      const sample = entry[1];
-      if (sample.buffer) {
-        sample.source = 'state';
-        return Promise.resolve();
-      }
-      else {
-        const sampleUrl = samplePathToUrlCallback(sample.path);
-        return downloadBuffer(audioContext, sampleUrl)
-          .catch((error) => console.error('sample download error ' + sampleName, error))
-          .then((audioBuffer) => {
-            if (audioBuffer) {
-              sample.buffer = audioBuffer;
-              sample.source = 'download';
-            }
-          });
-      }
-    }),
-    Promise.resolve()
-  );
-};
-
-const loadSampleBuffersParallel = (audioContext, samples, _samplePathToUrlCallback = defaultSamplePathToUrlCallback) => {
+const loadSampleBuffers = (audioContext, samples, _samplePathToUrlCallback = defaultSamplePathToUrlCallback) => {
   const samplePathToUrlCallback = typeof _samplePathToUrlCallback === 'function' ? _samplePathToUrlCallback : defaultSamplePathToUrlCallback;
   return Promise.all(Object.entries(samples).map((entry) => new Promise((resolve) => {
     const sampleName = entry[0];
@@ -89,8 +63,6 @@ const newSampleNode = (audioBuffer, audioContext, gain = null) => {
 
 export {
   downloadBuffer,
-  loadSampleBuffersSequential,
-  loadSampleBuffersParallel,
-  loadSampleBuffersParallel as loadSampleBuffers,
+  loadSampleBuffers,
   newSampleNode
-}
+};
