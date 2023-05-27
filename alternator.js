@@ -1,33 +1,9 @@
-import Scheduler from "./scheduler.js";
-
-
-const CompositionDescriptor = (_composition, _progressions, _samples) => {
-  const composition = _composition;
-  const progressions = _progressions;
-  const samples = _samples;
-  return {
-    getComposition: () => composition,
-    getProgressions: () => progressions,
-    getSamples: () => samples
-  }
-};
-
-const Alternator = (_audioContext, _compositionDescriptors,
-                    _alternateCallback = (_schedulerIndex) => {}, _stopCallback = (_schedulerIndex) => {}) => {
-
-  const audioContext = _audioContext;
-  const compositionDescriptors = _compositionDescriptors;
-  const alternateCallback = typeof _alternateCallback === 'function' ? _alternateCallback : (_schedulerIndex) => {};
-  const stopCallback = typeof _stopCallback === 'function' ? _stopCallback : (_schedulerIndex) => {};
-
-  const schedulers = compositionDescriptors.map((compositionDescriptor) =>
-    Scheduler(
-      compositionDescriptor.getComposition(),
-      compositionDescriptor.getProgressions(),
-      compositionDescriptor.getSamples(),
-      audioContext
-    )
-  );
+const Alternator = (_schedulers,
+                    _alternateCallback = (_schedulerIndex, _schedulersLength) => {},
+                    _stopCallback = (_schedulerIndex, _schedulersLength) => {}) => {
+  const schedulers = [..._schedulers];
+  const alternateCallback = typeof _alternateCallback === 'function' ? _alternateCallback : (_schedulerIndex, _schedulersLength) => {};
+  const stopCallback = typeof _stopCallback === 'function' ? _stopCallback : (_schedulerIndex, _schedulersLength) => {};
 
   let running = false;
   let schedulerIndex = schedulers.length - 1;
@@ -44,7 +20,7 @@ const Alternator = (_audioContext, _compositionDescriptors,
     currScheduler.start(() => {
       alternate();
     });
-    alternateCallback(schedulerIndex);
+    alternateCallback(schedulerIndex, schedulers.length);
   };
 
   return {
@@ -67,7 +43,7 @@ const Alternator = (_audioContext, _compositionDescriptors,
       if (running === true) {
         running = false;
         currScheduler.stop(true);
-        stopCallback(schedulerIndex);
+        stopCallback(schedulerIndex, schedulers.length);
       }
       else {
         console.warn(`alternator illegal state - running=${running}`);
@@ -77,17 +53,16 @@ const Alternator = (_audioContext, _compositionDescriptors,
       if (running === true) {
         currScheduler.stopAfterLastScheduled(true, () => {
           running = false;
-          stopCallback(schedulerIndex);
+          stopCallback(schedulerIndex, schedulers.length);
         });
       }
       else {
         console.warn(`alternator illegal state - running=${running}`);
       }
-    }
-  }
+    },
+    get schedulersLength(){return schedulers.length;}
+  };
 };
-
-Alternator.CompositionDescriptor = CompositionDescriptor;
 
 
 export default Alternator;
